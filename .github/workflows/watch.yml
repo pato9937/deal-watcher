@@ -1,0 +1,38 @@
+name: Deal Watcher
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repozitára
+        uses: actions/checkout@v4
+
+      - name: Nastavenie Pythonu
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Inštalácia závislostí
+        run: pip install -r requirements.txt
+
+      - name: Spustenie watcher.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python watcher.py
+
+      - name: Uloženie stavu (aby sa upozornenia neopakovali)
+        run: |
+          git config user.name "deal-watcher-bot"
+          git config user.email "actions@github.com"
+          git add state.json
+          git diff --staged --quiet || git commit -m "update seen state [skip ci]"
+          git push
