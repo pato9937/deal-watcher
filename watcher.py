@@ -13,6 +13,7 @@ import re
 import sys
 import time
 import json
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -21,9 +22,47 @@ from bs4 import BeautifulSoup
 STATE_FILE = "state.json"
 CONFIG_FILE = "config.yaml"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; DealWatcher/1.0; osobné sledovanie zliav)"
-}
+
+def build_session():
+    """Session, ktorá sa hlavičkami podobá na bežný Chrome prehliadač.
+    Niektoré eshopy (napr. 8a.sk) vracajú 403 Forbidden pre požiadavky
+    s príliš jednoduchým/podozrivým User-Agentom."""
+    s = requests.Session()
+    s.headers.update(
+        {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "sk-SK,sk;q=0.9,cs;q=0.8,en;q=0.7",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+        }
+    )
+    return s
+
+
+SESSION = build_session()
+_visited_homepages = set()
+
+
+def fetch(url):
+    """Stiahne stránku. Pred prvou požiadavkou na danú doménu si najprv
+    'prejde' cez domovskú stránku (ako reálny návštevník) - niektoré
+    ochrany proti botom to kontrolujú."""
+    parsed = urlparse(url)
+    homepage = f"{parsed.scheme}://{parsed.netloc}/"
+    if homepage not in _visited_homepages:
+        try:
+            SESSION.get(homepage, timeout=20)
+        except Exception:
+            pass
+        _visited_homepages.add(homepage)
+        time.sleep(1)
+    resp = SESSION.get(url, timeout=20, headers={"Referer": homepage})
+    resp.raise_for_status()
+    return resp.text
 
 
 # ---------------------------------------------------------------------------
@@ -181,14 +220,13 @@ def main():
             continue
 
         try:
-            resp = requests.get(site["url"], headers=HEADERS, timeout=20)
-            resp.raise_for_status()
+            html = fetch(site["url"])
         except Exception as e:
             print(f"Chyba pri sťahovaní '{site['name']}': {e}")
             continue
 
         try:
-            products = parser(resp.text, site["url"])
+            products = parser(html, site["url"])
         except Exception as e:
             print(f"Chyba pri parsovaní '{site['name']}': {e}")
             continue
