@@ -1,0 +1,71 @@
+# ============================================================
+# Deal Watcher - konfigurácia
+# ============================================================
+
+# Minimálna výška zľavy, ktorá sa má hlásiť (v percentách).
+# Príklad zo zadania (fleece za 33 € namiesto 130 €) bol cca -75 %.
+min_discount_percent: 50
+
+# Značky, ktoré ťa zaujímajú. Stačí, aby sa reťazec objavil kdekoľvek
+# v názve produktu (nerozlišuje veľké/malé písmená).
+# Ak necháš prázdny zoznam [], budú sa hlásiť VŠETKY zľavy nad min_discount_percent.
+brands:
+  - Arc'teryx
+  - Arcteryx
+  - The North Face
+  - Rab
+  - La Sportiva
+  - Salomon
+  - Hoka
+  - Patagonia
+  - Salewa
+  - Dynafit
+
+# ------------------------------------------------------------
+# Sledované stránky
+# ------------------------------------------------------------
+# 8a.sk beží na Magento platforme (rovnaká ako 8a.cz, 8a.pl, 8a.si...),
+# takže rovnaký "8a_style" parser funguje na všetkých mutáciách -
+# stačí zmeniť doménu v url.
+#
+# Chceš pridať ďalší eshop (napr. Answear, Zalando)? Pozri README.md,
+# sekcia "Pridanie nového webu" - vysvetľuje, ako napísať vlastný parser.
+# ------------------------------------------------------------
+
+sites:
+  - name: "8a.sk - celý outlet (zoradené podľa najväčšej zľavy)"
+    url: "https://8a.sk/outlet?product_list_order=saving"
+    parser: 8a_style
+    enabled: true
+
+  - name: "8a.sk - Arc'teryx"
+    url: "https://8a.sk/arcteryx-outlet"
+    parser: 8a_style
+    enabled: true
+
+  - name: "8a.sk - La Sportiva"
+    url: "https://8a.sk/la-sportiva-outlet"
+    parser: 8a_style
+    enabled: true
+
+  - name: "8a.sk - The North Face"
+    url: "https://8a.sk/the-north-face-outlet"
+    parser: 8a_style
+    enabled: true
+
+  - name: "8a.sk - Salomon"
+    url: "https://8a.sk/salomon-outlet"
+    parser: 8a_style
+    enabled: true
+
+  - name: "8a.sk - Patagonia"
+    url: "https://8a.sk/patagonia-outlet"
+    parser: 8a_style
+    enabled: true
+
+  # Príklady ďalších mutácií tej istej platformy - zapni podľa potreby
+  # (odstráň # na začiatku riadkov):
+  # - name: "8a.cz - celý outlet"
+  #   url: "https://8a.cz/outlet?product_list_order=saving"
+  #   parser: 8a_style
+  #   enabled: false
